@@ -1,0 +1,8 @@
+.git
+.gitignore
+
+__pycache__/
+/setup.cfg
+
+.vscode
+cloud_sql_proxy_x64

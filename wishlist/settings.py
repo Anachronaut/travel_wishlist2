@@ -23,10 +23,17 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '^rohlhh!-iyj5t3b-gda!)-8@b_qre^v5@)c(t@%cw0x&ek*ne'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if os.getenv('GAE_INSTANCE'):
+    DEBUG = False
+else:
+    DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [*]
 
+if os.getenv('GAE_INSTANCE'):
+    ALLOWED_HOSTS = ['travel-wish.appspot.com']
+else:
+    ALLOWED_HOSTS = ['127.0.0.1']
 
 # Application definition
 
@@ -76,10 +83,17 @@ WSGI_APPLICATION = 'wishlist.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'places',
+        'USER': 'traveler',
+        'PASSWORD': os.getenv('TRAVELER_PW'),
+        'HOST': '/cloudsql/travel-wish:us-central1:wishlist-db',
+        'PORT': '5432'
     }
 }
+
+if not os.getenv('GAE_INSTANCE'):
+    DATABASES['default']['HOST'] = '127.0.0.1'
 
 
 # Password validation
@@ -117,11 +131,22 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
+STATIC_ROOT = os.path.join(BASE_DIR, 'www', 'static')
 
-STATIC_URL = '/static/'
 
-#Media URL, for user-created media - becomes part of URL when images are displayed
-MEDIA_URL = '/media/'
 
 #Where in the file system to save user-uploaded files
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+GS_STATIC_FILE_BUCKET = 'travel-wish.appspot.com'
+
+STATIC_URL = f'https://storage.cloud.google.com/{GS_STATIC_FILE_BUCKET}/static/'
+
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+GS_BUCKET_NAME = 'usr-plc-imgs'
+
+#Media URL, for user-created media - becomes part of URL when images are displayed
+MEDIA_URL = f'https://storage.cloud.google.com/{GS_BUCKET_NAME}/static/'
+
+from google.oauth2 import service_account
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file("travel wish-606bb819bc96.json")
